@@ -95,9 +95,9 @@ def split_nodes_link(old_nodes):
     return new_nodes
 
 def extract_markdown_images(text: str):
-    images = re.findall(r"!\[(.+)\]\((.+)\)", text)
+    images = re.findall(r"!\[(.+?)\]\((.+?)\)", text)
     return images
 
 def extract_markdown_links(text: str):
-    links = re.findall(r"\[(.+)\]\((.+)\)", text)
+    links = re.findall(r"\[(.+?)\]\((.+?)\)", text)
     return links
