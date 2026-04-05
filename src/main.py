@@ -1,27 +1,77 @@
 from textnode import TextNode, TextType
 from htmlnode import LeafNode
+from block_markdown import markdown_to_html_node
+
+import os
+import shutil
+import re
 
 def main():
-    node = TextNode("Hello world", text_type=TextType("TEXT"), url="www.testing123.com")
-    print(node)
+    copy_content("static", "public")
 
-def text_node_to_html_node(text_node: TextNode):
-    if text_node.text_type == "TEXT":
-        return LeafNode(tag=None, value=text_node.text)
-    
-    elif text_node.text_type == "BOLD":
-        return LeafNode(tag="b", value=text_node.text)
-    
-    elif text_node.text_type == "ITALIC":
-        return LeafNode(tag="i", value=text_node.text)
-    
-    elif text_node.text_type == "CODE":
-        return LeafNode(tag="code", value=text_node.text)
-    
-    elif text_node.text_type == "LINK":
-        return LeafNode(tag="a", value=text_node.text, props={"href": text_node.url})
+def copy_content(src, dst):
+    if not os.path.exists(src):
+        raise Exception("Source path does not exist")
+    if os.path.exists(dst):
+        shutil.rmtree(dst)
+        os.mkdir(dst)
     else:
-        return LeafNode(tag="img", value="", props={"src": text_node.url, "alt": text_node.text})
+        os.mkdir(dst)
+    src_items = os.listdir(src)
+    for src_item in src_items:
+        item_path = os.path.join(src, src_item)
+        print(item_path)
+        if os.path.isfile(item_path):
+            shutil.copy(item_path, dst)
+        else:
+            sub_dst = os.path.join(dst, src_item)
+            copy_content(item_path, sub_dst)
+
+    generate_pages_recursive(dir_path_content="content", template_path="template.html", dest_dir_path="public")
+
+def extract_title(markdown):
+    h1 = re.search(r"#.*", markdown)
+    if not h1:
+        raise Exception("No h1 header")
+    return h1.group().strip()
+
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    if not os.path.exists(dir_path_content):
+        raise Exception("Content path does not exist")
+    if not os.path.exists(dest_dir_path):
+        os.mkdir(dest_dir_path)
+
+    cont_items = os.listdir(dir_path_content)
+    for cont_item in cont_items:
+        item_path = os.path.join(dir_path_content, cont_item)
+        if os.path.isfile(item_path):
+            generate_page(item_path, template_path, dest_dir_path)
+
+        else:
+            sub_dst = os.path.join(dest_dir_path, cont_item)
+            generate_pages_recursive(item_path, template_path, sub_dst)
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     
+    with open(from_path, "r") as f:
+        src_md = f.read()
+    with open(template_path, "r") as f:
+        template = f.read()
+
+    html_node = markdown_to_html_node(src_md)
+    html = html_node.to_html()
+    title = extract_title(src_md)
+    
+    template = template.replace("{{ Title }}", title)
+    template = template.replace("{{ Content }}", html)
+
+    filename = os.path.basename(from_path)
+    file_no_ext = os.path.splitext(filename)[0]
+    html_file = file_no_ext + ".html"
+    dest_file_path = os.path.join(dest_path, html_file)
+    with open(dest_file_path, "w") as f:
+        f.write(template)
 
 main()

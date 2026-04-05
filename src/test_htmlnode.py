@@ -5,7 +5,7 @@ from htmlnode import HTMLNode, LeafNode, ParentNode
 class TestHTMLNode(unittest.TestCase):
     def test_HTMLNode_repr(self):
         node = HTMLNode(tag=None, value="one", children=["done"], props={"href": "https://www.google.com", "target": "_blank"})
-        self.assertEqual(node.__repr__(), f"HTMLNode({node.tag}, {node.value}, {node.children}, {node.props})" )
+        self.assertEqual(node.__repr__(), f"HTMLNode({node.tag}, {node.value}, children: {node.children}, {node.props})" )
 
     def test_props_to_html(self):
         node = HTMLNode(props={"href": "https://www.funkymonkey.com", "target": "banana"})
