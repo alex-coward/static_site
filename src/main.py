@@ -1,13 +1,19 @@
 from textnode import TextNode, TextType
 from htmlnode import LeafNode
 from block_markdown import markdown_to_html_node
+import sys
 
 import os
 import shutil
 import re
 
+if sys.argv[0]:
+    basepath = sys.argv[0]
+else:
+    basepath = "/"
+
 def main():
-    copy_content("static", "public")
+    copy_content("static", "docs")
 
 def copy_content(src, dst):
     if not os.path.exists(src):
@@ -27,7 +33,8 @@ def copy_content(src, dst):
             sub_dst = os.path.join(dst, src_item)
             copy_content(item_path, sub_dst)
 
-    generate_pages_recursive(dir_path_content="content", template_path="template.html", dest_dir_path="public")
+    generate_pages_recursive(dir_path_content="content", template_path="template.html",
+                              dest_dir_path="docs", basepath=basepath)
 
 def extract_title(markdown):
     h1 = re.search(r"#.*", markdown)
@@ -36,7 +43,7 @@ def extract_title(markdown):
     return h1.group().strip()
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     if not os.path.exists(dir_path_content):
         raise Exception("Content path does not exist")
     if not os.path.exists(dest_dir_path):
@@ -46,13 +53,13 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
     for cont_item in cont_items:
         item_path = os.path.join(dir_path_content, cont_item)
         if os.path.isfile(item_path):
-            generate_page(item_path, template_path, dest_dir_path)
+            generate_page(item_path, template_path, dest_dir_path, basepath)
 
         else:
             sub_dst = os.path.join(dest_dir_path, cont_item)
-            generate_pages_recursive(item_path, template_path, sub_dst)
+            generate_pages_recursive(item_path, template_path, sub_dst, basepath)
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     
     with open(from_path, "r") as f:
@@ -66,6 +73,8 @@ def generate_page(from_path, template_path, dest_path):
     
     template = template.replace("{{ Title }}", title)
     template = template.replace("{{ Content }}", html)
+    template = template.replace("href='/", 'href="{basepath}')
+    template = template.replace("src='/", "src='/")
 
     filename = os.path.basename(from_path)
     file_no_ext = os.path.splitext(filename)[0]
