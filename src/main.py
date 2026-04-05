@@ -74,7 +74,9 @@ def generate_page(from_path, template_path, dest_path, basepath):
     template = template.replace("{{ Title }}", title)
     template = template.replace("{{ Content }}", html)
     template = template.replace('href="/', f'href="{basepath}')
-    template = template.replace('src="/', f'src="{basepath}')
+    template = template.replace('href=/', f'href={basepath}')
+    template = template.replace('src=/', f'src={basepath}')
+
 
     filename = os.path.basename(from_path)
     file_no_ext = os.path.splitext(filename)[0]
